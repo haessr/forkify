@@ -482,10 +482,13 @@ const controlRecipes = async function () {
   } catch (err) {
     console.log(err);
   }
-}; // controlRecipes();
+};
 
+const init = function () {
+  _recipeView.default.addHandlerRender(controlRecipes);
+};
 
-['hashchange', 'load'].forEach(event => window.addEventListener(event, controlRecipes));
+init();
 },{"core-js/modules/web.immediate.js":"140df4f8e97a45c53c66fead1f5a9e92","core-js/modules/web.url.js":"a66c25e402880ea6b966ee8ece30b6df","core-js/modules/web.url.to-json.js":"6357c5a053a36e38c0e24243e550dd86","core-js/modules/web.url-search-params.js":"2494aebefd4ca447de0ef4cfdd47509e","./model.js":"aabf248f40f7693ef84a0cb99f385d1f","./views/recipeView.js":"bcae1aced0301b01ccacb3e6f7dfede8"}],"140df4f8e97a45c53c66fead1f5a9e92":[function(require,module,exports) {
 var $ = require('../internals/export');
 
@@ -4717,6 +4720,10 @@ class RecipeView {
     _classPrivateMethodGet(this, _clear, _clear2).call(this);
 
     _classPrivateFieldGet(this, _parentElement).insertAdjacentHTML('afterbegin', markup);
+  }
+
+  addHandlerRender(handler) {
+    ['hashchange', 'load'].forEach(event => window.addEventListener(event, handler));
   }
 
 }
