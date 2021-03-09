@@ -449,13 +449,13 @@ var model = _interopRequireWildcard(require("./model.js"));
 
 var _recipeView = _interopRequireDefault(require("./views/recipeView.js"));
 
+var _searchView = _interopRequireDefault(require("./views/searchView.js"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-const recipeContainer = document.querySelector('.recipe');
 
 const timeout = function (s) {
   return new Promise(function (_, reject) {
@@ -485,12 +485,29 @@ const controlRecipes = async function () {
   }
 };
 
+const controlSearchResults = async function () {
+  try {
+    // 1) Get search query
+    const query = _searchView.default.getQuery();
+
+    if (!query) return; // 2) Load search results
+
+    await model.loadSearchResults(query); // 3) Render results
+
+    console.log(model.state.search.results);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const init = function () {
   _recipeView.default.addHandlerRender(controlRecipes);
+
+  _searchView.default.addHandlerSearch(controlSearchResults);
 };
 
 init();
-},{"core-js/modules/web.immediate.js":"140df4f8e97a45c53c66fead1f5a9e92","core-js/modules/web.url.js":"a66c25e402880ea6b966ee8ece30b6df","core-js/modules/web.url.to-json.js":"6357c5a053a36e38c0e24243e550dd86","core-js/modules/web.url-search-params.js":"2494aebefd4ca447de0ef4cfdd47509e","./model.js":"aabf248f40f7693ef84a0cb99f385d1f","./views/recipeView.js":"bcae1aced0301b01ccacb3e6f7dfede8"}],"140df4f8e97a45c53c66fead1f5a9e92":[function(require,module,exports) {
+},{"core-js/modules/web.immediate.js":"140df4f8e97a45c53c66fead1f5a9e92","core-js/modules/web.url.js":"a66c25e402880ea6b966ee8ece30b6df","core-js/modules/web.url.to-json.js":"6357c5a053a36e38c0e24243e550dd86","core-js/modules/web.url-search-params.js":"2494aebefd4ca447de0ef4cfdd47509e","./model.js":"aabf248f40f7693ef84a0cb99f385d1f","./views/recipeView.js":"bcae1aced0301b01ccacb3e6f7dfede8","./views/searchView.js":"c5d792f7cac03ef65de30cc0fbb2cae7"}],"140df4f8e97a45c53c66fead1f5a9e92":[function(require,module,exports) {
 var $ = require('../internals/export');
 
 var global = require('../internals/global');
@@ -3818,7 +3835,7 @@ $({ target: 'URL', proto: true, enumerable: true }, {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.loadRecipe = exports.state = void 0;
+exports.loadSearchResults = exports.loadRecipe = exports.state = void 0;
 
 var _regeneratorRuntime = require("regenerator-runtime");
 
@@ -3827,13 +3844,17 @@ var _config = require("./config.js");
 var _helpers = require("./helpers.js");
 
 const state = {
-  recipe: {}
+  recipe: {},
+  search: {
+    query: '',
+    results: []
+  }
 };
 exports.state = state;
 
 const loadRecipe = async function (id) {
   try {
-    const data = await (0, _helpers.getJSON)(`${_config.API_URL}/${id}`);
+    const data = await (0, _helpers.getJSON)(`${_config.API_URL}${id}`);
     const {
       recipe
     } = data.data;
@@ -3854,6 +3875,25 @@ const loadRecipe = async function (id) {
 };
 
 exports.loadRecipe = loadRecipe;
+
+const loadSearchResults = async function (query) {
+  try {
+    state.search.query = query;
+    const data = await (0, _helpers.getJSON)(`${_config.API_URL}?search=${query}`);
+    state.search.results = data.data.recipes.map(recipe => {
+      return {
+        id: recipe.id,
+        title: recipe.title,
+        publisher: recipe.publisher,
+        image: recipe.image_url
+      };
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.loadSearchResults = loadSearchResults;
 },{"regenerator-runtime":"e155e0d3930b156f86c48e8d05522b16","./config.js":"09212d541c5c40ff2bd93475a904f8de","./helpers.js":"0e8dcd8a4e1c61cf18f78e1c2563655d"}],"e155e0d3930b156f86c48e8d05522b16":[function(require,module,exports) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -4612,7 +4652,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.TIMEOUT_SECONDS = exports.API_URL = void 0;
 // CONSTANTS ACROSS THE APP
-const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes';
+const API_URL = 'https://forkify-api.herokuapp.com/api/v2/recipes/';
 exports.API_URL = API_URL;
 const TIMEOUT_SECONDS = 10;
 exports.TIMEOUT_SECONDS = TIMEOUT_SECONDS;
@@ -5360,6 +5400,56 @@ Fraction.primeFactors = function(n)
 
 module.exports.Fraction = Fraction
 
+},{}],"c5d792f7cac03ef65de30cc0fbb2cae7":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
+
+function _classPrivateFieldGet(receiver, privateMap) { var descriptor = privateMap.get(receiver); if (!descriptor) { throw new TypeError("attempted to get private field on non-instance"); } if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
+
+var _parentElement = new WeakMap();
+
+var _clearInput = new WeakSet();
+
+class SearchView {
+  constructor() {
+    _clearInput.add(this);
+
+    _parentElement.set(this, {
+      writable: true,
+      value: document.querySelector('.search')
+    });
+  }
+
+  getQuery() {
+    const query = _classPrivateFieldGet(this, _parentElement).querySelector('.search__field').value;
+
+    _classPrivateMethodGet(this, _clearInput, _clearInput2).call(this);
+
+    return query;
+  }
+
+  addHandlerSearch(handler) {
+    _classPrivateFieldGet(this, _parentElement).addEventListener('submit', function (e) {
+      e.preventDefault();
+      handler();
+    });
+  }
+
+}
+
+var _clearInput2 = function _clearInput2() {
+  _classPrivateFieldGet(this, _parentElement).querySelector('.search__field').value = '';
+};
+
+var _default = new SearchView();
+
+exports.default = _default;
 },{}]},{},["6e9f0e106c250c9f9efebc313ba169a5","02355265a9a91c42b46f70cab84ecb35","175e469a7ea7db1c8c0744d04372621f"], null)
 
 //# sourceMappingURL=controller.b552dc10.js.map
