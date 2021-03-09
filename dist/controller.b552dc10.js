@@ -480,7 +480,8 @@ const controlRecipes = async function () {
     _recipeView.default.render(model.state.recipe); // console.log(recipe.ingredients);
 
   } catch (err) {
-    console.log(err);
+    // console.log(err);
+    _recipeView.default.renderError();
   }
 };
 
@@ -3848,7 +3849,7 @@ const loadRecipe = async function (id) {
     }; // console.log(state.recipe);
   } catch (err) {
     // TEMP ERROR HANDLING
-    console.error(err);
+    throw err;
   }
 };
 
@@ -4674,6 +4675,10 @@ var _parentElement = new WeakMap();
 
 var _data = new WeakMap();
 
+var _errorMessage = new WeakMap();
+
+var _message = new WeakMap();
+
 var _clear = new WeakSet();
 
 var _generateMarkup = new WeakSet();
@@ -4698,6 +4703,16 @@ class RecipeView {
       value: void 0
     });
 
+    _errorMessage.set(this, {
+      writable: true,
+      value: 'We could not find that recipe. Please try another one!'
+    });
+
+    _message.set(this, {
+      writable: true,
+      value: ''
+    });
+
     _defineProperty(this, "renderSpinner", function () {
       const markup = `
         <div class="spinner">
@@ -4706,7 +4721,8 @@ class RecipeView {
           </svg>
         </div> 
   `;
-      _classPrivateFieldGet(this, _parentElement).innerHTML = '';
+
+      _classPrivateMethodGet(this, _clear, _clear2).call(this);
 
       _classPrivateFieldGet(this, _parentElement).insertAdjacentHTML('afterbegin', markup);
     });
@@ -4716,6 +4732,40 @@ class RecipeView {
     _classPrivateFieldSet(this, _data, data);
 
     const markup = _classPrivateMethodGet(this, _generateMarkup, _generateMarkup2).call(this);
+
+    _classPrivateMethodGet(this, _clear, _clear2).call(this);
+
+    _classPrivateFieldGet(this, _parentElement).insertAdjacentHTML('afterbegin', markup);
+  }
+
+  renderError(message = _classPrivateFieldGet(this, _errorMessage)) {
+    const markup = `
+      <div class="error">
+        <div>
+          <svg>
+            <use href="${_icons.default}#icon-alert-triangle"></use>
+          </svg>
+        </div>
+        <p>${message}</p>
+      </div>
+   `;
+
+    _classPrivateMethodGet(this, _clear, _clear2).call(this);
+
+    _classPrivateFieldGet(this, _parentElement).insertAdjacentHTML('afterbegin', markup);
+  }
+
+  renderMessage(message = _classPrivateFieldGet(this, _message)) {
+    const markup = `
+      <div class="message">
+        <div>
+          <svg>
+            <use href="${_icons.default}#icon-smile"></use>
+          </svg>
+        </div>
+        <p>${message}</p>
+      </div>
+   `;
 
     _classPrivateMethodGet(this, _clear, _clear2).call(this);
 
